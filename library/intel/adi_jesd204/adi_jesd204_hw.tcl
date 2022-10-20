@@ -46,7 +46,7 @@ package require qsys
 source ../../scripts/adi_env.tcl
 source ../../scripts/adi_ip_intel.tcl
 
-set version 19.1
+set version 22.3
 
 #
 # Wrapper module that instantiates and connects all the components required to
@@ -142,7 +142,7 @@ proc create_phy_reset_control {tx num_of_lanes sysclk_frequency} {
 
   if {[string equal $device "Arria 10"]} {
 
-    add_instance phy_reset_control altera_xcvr_reset_control $version
+    add_instance phy_reset_control altera_xcvr_reset_control 19.1.1
     set_instance_property phy_reset_control SUPPRESS_ALL_WARNINGS true
     set_instance_parameter_value phy_reset_control {SYNCHRONIZE_RESET} {0}
     set_instance_parameter_value phy_reset_control {CHANNELS} $num_of_lanes
@@ -211,7 +211,7 @@ proc create_lane_pll {id tx_or_rx_n pllclk_frequency refclk_frequency num_lanes 
   set device_family [get_parameter_value "DEVICE_FAMILY"]
 
   if {$device_family == "Arria 10"} {
-    add_instance lane_pll altera_xcvr_atx_pll_a10 $version
+    add_instance lane_pll altera_xcvr_atx_pll_a10 19.1
     if {$num_lanes > 6} {
       set_instance_parameter_value lane_pll enable_mcgb {true}
       if {$bonding_clocks_en} {
@@ -356,7 +356,7 @@ proc jesd204_compose {} {
     return
   }
 
-  add_instance sys_clock clock_source 19.2
+  add_instance sys_clock clock_source $version
   set_instance_parameter_value sys_clock {clockFrequency} [expr $sysclk_frequency*1000000]
   set_instance_parameter_value sys_clock {resetSynchronousEdges} {deassert}
   add_interface sys_clk clock sink
@@ -364,7 +364,7 @@ proc jesd204_compose {} {
   add_interface sys_resetn reset sink
   set_interface_property sys_resetn EXPORT_OF sys_clock.clk_in_reset
 
-  add_instance ref_clock altera_clock_bridge $version
+  add_instance ref_clock altera_clock_bridge 19.2.0
   set_instance_parameter_value ref_clock {EXPLICIT_CLOCK_RATE} [expr $refclk_frequency*1000000]
   add_interface ref_clk clock sink
   set_interface_property ref_clk EXPORT_OF ref_clock.in_clk
@@ -374,16 +374,16 @@ proc jesd204_compose {} {
   ## link clock configuration (also known as device clock, which will be used
   ## by the upper layers for the data path, it can come from the PCS or external)
 
-  add_instance link_clock altera_clock_bridge $version
+  add_instance link_clock altera_clock_bridge 19.2.0
   set_instance_parameter_value link_clock {EXPLICIT_CLOCK_RATE} [expr $linkclk_frequency*1000000]
   set_instance_parameter_value link_clock {NUM_CLOCK_OUTPUTS} 2
 
-  add_instance link_reset altera_reset_bridge $version
+  add_instance link_reset altera_reset_bridge 19.2.0
   set_instance_parameter_value link_reset {NUM_RESET_OUTPUTS} 2
 
   if {$device_family == "Arria 10"} {
 
-    add_instance link_pll altera_xcvr_fpll_a10 $version
+    add_instance link_pll altera_xcvr_fpll_a10 19.1
     set_instance_parameter_value link_pll {gui_fpll_mode} {0}
     set_instance_parameter_value link_pll {gui_reference_clock_frequency} $refclk_frequency
     set_instance_parameter_value link_pll {gui_number_of_output_clocks} 1
@@ -392,7 +392,7 @@ proc jesd204_compose {} {
 
     set outclk_name "outclk0"
 
-    add_instance link_pll_reset_control altera_xcvr_reset_control $version
+    add_instance link_pll_reset_control altera_xcvr_reset_control 19.1.1
     set_instance_parameter_value link_pll_reset_control {SYNCHRONIZE_RESET} {0}
     set_instance_parameter_value link_pll_reset_control {SYS_CLK_IN_MHZ} $sysclk_frequency
     set_instance_parameter_value link_pll_reset_control {TX_PLL_ENABLE} {1}
@@ -485,7 +485,7 @@ proc jesd204_compose {} {
   ## connect the required device clock
 
   if {$ext_device_clk_en} {
-    add_instance ext_device_clock altera_clock_bridge $version
+    add_instance ext_device_clock altera_clock_bridge 19.2.0
     set_instance_parameter_value ext_device_clock {EXPLICIT_CLOCK_RATE} [expr $linkclk_frequency*1000000]
     set_instance_parameter_value ext_device_clock {NUM_CLOCK_OUTPUTS} 2
     add_interface device_clk clock sink
